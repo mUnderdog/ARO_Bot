@@ -1,53 +1,46 @@
 import time
-from google import genai
-from google.genai import errors as genai_errors
-from config import GEMINI_API_KEY
+import os
+import openai
+from config import OPENAI_API_KEY
 
 def ask_llm(prompt: str, retries: int = 2) -> str:
     """
-    Query the Google Gemini model using the new google-genai SDK.
+    Query the OpenAI GPT model.
     Handles quota errors with a brief retry and clear error messages.
     """
-    if not GEMINI_API_KEY:
-        return "Error: GEMINI_API_KEY is missing from .env"
+    if not OPENAI_API_KEY:
+        return "Error: OPENAI_API_KEY is missing from .env"
 
-    client = genai.Client(api_key=GEMINI_API_KEY)
+    client = openai.OpenAI(api_key=OPENAI_API_KEY)
 
     for attempt in range(retries + 1):
         try:
-            response = client.models.generate_content(
-                model="gemini-2.0-flash",
-                contents=prompt,
+            response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[{"role": "user", "content": prompt}],
             )
-            return response.text
+            return response.choices[0].message.content
 
-        except genai_errors.ClientError as e:
-            code = e.code if hasattr(e, "code") else 0
-            msg  = str(e)
-
-            if code == 429:
-                # Daily quota exhausted — no point retrying
-                if "generate_content_free_tier" in msg and "limit: 0" in msg:
-                    return (
-                        "⚠️ Gemini API daily quota exhausted.\n\n"
-                        "The free-tier daily request limit for this API key has been reached. "
-                        "Please wait until tomorrow for the quota to reset, or upgrade your "
-                        "Google AI Studio plan at https://ai.google.dev/gemini-api/docs/rate-limits"
-                    )
-                # Minute-level throttle — wait and retry
-                if attempt < retries:
-                    wait = 20 * (attempt + 1)
-                    time.sleep(wait)
-                    continue
-                return f"⚠️ Gemini API rate limit hit after {retries} retries. Try again in a minute."
-
-            if code == 401 or code == 403:
+        except openai.RateLimitError as e:
+            msg = str(e).lower()
+            if "insufficient_quota" in msg or "quota exceeded" in msg:
                 return (
-                    "⚠️ Gemini API authentication failed.\n\n"
-                    "Check that GEMINI_API_KEY in your .env is correct and active."
+                    "⚠️ OpenAI API quota exhausted.\n\n"
+                    "You have exceeded your current quota or your billing balance is exhausted. "
+                    "Please check your plan and billing details at https://platform.openai.com/account/billing"
                 )
+            if attempt < retries:
+                wait = 20 * (attempt + 1)
+                time.sleep(wait)
+                continue
+            return f"⚠️ OpenAI API rate limit hit after {retries} retries. Try again in a minute."
 
-            return f"Error querying LLM ({code}): {str(e)}"
-
+        except openai.AuthenticationError as e:
+            return (
+                "⚠️ OpenAI API authentication failed.\n\n"
+                "Check that OPENAI_API_KEY in your .env is correct and active."
+            )
+        except openai.APIError as e:
+            return f"Error querying LLM API: {str(e)}"
         except Exception as e:
             return f"Unexpected LLM error: {str(e)}"

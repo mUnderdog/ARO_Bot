@@ -341,10 +341,10 @@ def run_pipeline(query, num_results, researcher_prompt, email_prompt):
     st.session_state.done    = False
     st.session_state.status  = "running"
 
-    from config import GEMINI_API_KEY
+    from config import OPENAI_API_KEY
 
-    if not GEMINI_API_KEY:
-        log("GEMINI_API_KEY not found in .env — LLM features will fail.", "err")
+    if not OPENAI_API_KEY:
+        log("OPENAI_API_KEY not found in .env — LLM features will fail.", "err")
         st.session_state.status = "error"
         return
 
@@ -427,8 +427,8 @@ with st.sidebar:
     """, unsafe_allow_html=True)
 
     # ── Env status ──
-    from config import GEMINI_API_KEY, GOOGLE_API_KEY, GOOGLE_CSE_ID
-    gemini_ok = bool(GEMINI_API_KEY)
+    from config import OPENAI_API_KEY, GOOGLE_API_KEY, GOOGLE_CSE_ID
+    openai_ok = bool(OPENAI_API_KEY)
     google_ok = bool(GOOGLE_API_KEY and GOOGLE_CSE_ID)
 
     st.markdown('<div class="sec">🔐 Environment Status</div>', unsafe_allow_html=True)
@@ -436,10 +436,10 @@ with st.sidebar:
     with col_a:
         st.markdown(
             f'<div style="font-size:.75rem;padding:.35rem .6rem;border-radius:6px;'
-            f'background:{"rgba(63,185,80,.1)" if gemini_ok else "rgba(248,81,73,.1)"};'
-            f'border:1px solid {"rgba(63,185,80,.3)" if gemini_ok else "rgba(248,81,73,.3)"};'
-            f'color:{"#3fb950" if gemini_ok else "#f85149"};text-align:center;">'
-            f'{"✔" if gemini_ok else "✖"} Gemini</div>', unsafe_allow_html=True)
+            f'background:{"rgba(63,185,80,.1)" if openai_ok else "rgba(248,81,73,.1)"};'
+            f'border:1px solid {"rgba(63,185,80,.3)" if openai_ok else "rgba(248,81,73,.3)"};'
+            f'color:{"#3fb950" if openai_ok else "#f85149"};text-align:center;">'
+            f'{"✔" if openai_ok else "✖"} OpenAI</div>', unsafe_allow_html=True)
     with col_b:
         st.markdown(
             f'<div style="font-size:.75rem;padding:.35rem .6rem;border-radius:6px;'
@@ -448,8 +448,8 @@ with st.sidebar:
             f'color:{"#3fb950" if google_ok else "#e3b341"};text-align:center;">'
             f'{"✔" if google_ok else "⚠"} Google</div>', unsafe_allow_html=True)
 
-    if not gemini_ok:
-        st.warning("Add GEMINI_API_KEY to your `.env` file.", icon="⚠️")
+    if not openai_ok:
+        st.warning("Add OPENAI_API_KEY to your `.env` file.", icon="⚠️")
 
     # ── Search config ──
     st.markdown('<div class="sec">🔍 Search Configuration</div>', unsafe_allow_html=True)
@@ -491,7 +491,7 @@ with st.sidebar:
             st.session_state.status  = "ready"
             st.rerun()
 
-    st.markdown('<div class="sf">ARO Bot v1.0 · Gemini Flash · For freshers 🎓</div>',
+    st.markdown('<div class="sf">ARO Bot v1.0 · OpenAI GPT · For freshers 🎓</div>',
                 unsafe_allow_html=True)
 
 
@@ -508,8 +508,8 @@ if run_clicked:
         st.error("Cannot run — pipeline utilities failed to import. See error above.")
     elif not query.strip():
         st.error("Please enter a search query.")
-    elif not gemini_ok:
-        st.error("GEMINI_API_KEY is missing from .env — cannot run.")
+    elif not openai_ok:
+        st.error("OPENAI_API_KEY is missing from .env — cannot run.")
     else:
         run_pipeline(query.strip(), int(num_results), researcher_prompt, email_prompt)
         st.rerun()
@@ -518,11 +518,11 @@ if run_clicked:
 st.markdown("""
 <div class="hero">
     <h2>🎓 ARO Bot — Automated Research & Outreach</h2>
-    <p>Discover AI/tech companies, auto-research them with Gemini, and generate
+    <p>Discover AI/tech companies, auto-research them with OpenAI, and generate
        personalised cold emails — all in one click. Built to help freshers land their first internship or job.</p>
     <div class="chips">
         <div class="chip"><span class="dot" style="background:#4f8ef7"></span>Google Search API</div>
-        <div class="chip"><span class="dot" style="background:#a78bfa"></span>Gemini Flash</div>
+        <div class="chip"><span class="dot" style="background:#a78bfa"></span>OpenAI GPT</div>
         <div class="chip"><span class="dot" style="background:#3fb950"></span>Smart Email Drafting</div>
         <div class="chip"><span class="dot" style="background:#e3b341"></span>CSV Export</div>
     </div>
