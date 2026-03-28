@@ -460,7 +460,7 @@ with st.sidebar:
         key="query_input",
     )
     num_results = st.number_input(
-        "Max Companies", min_value=1, max_value=10, value=3, step=1,
+        "Max Companies", min_value=1, max_value=5, value=3, step=1,
         key="num_results_input",
     )
 
